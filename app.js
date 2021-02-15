@@ -2,6 +2,7 @@ const imagesArea = document.querySelector('.images');
 const gallery = document.querySelector('.gallery');
 const galleryHeader = document.querySelector('.gallery-header');
 const searchBtn = document.getElementById('search-btn');
+const searchForm = document.getElementById('search-form');
 const sliderBtn = document.getElementById('create-slider');
 const sliderContainer = document.getElementById('sliders');
 // selected image 
@@ -20,6 +21,7 @@ const showImages = (images) => {
   // show gallery title
   galleryHeader.style.display = 'flex';
   images.forEach(image => {
+    spinnerHandler(false);
     let div = document.createElement('div');
     div.className = 'col-lg-3 col-md-4 col-xs-6 img-item mb-2';
     div.innerHTML = ` <img class="img-fluid img-thumbnail" onclick=selectItem(event,"${image.webformatURL}") src="${image.webformatURL}" alt="${image.tags}">`;
@@ -29,22 +31,23 @@ const showImages = (images) => {
 }
 
 const getImages = (query) => {
+  spinnerHandler(true);
   fetch(`https://pixabay.com/api/?key=${KEY}=${query}&image_type=photo&pretty=true`)
     .then(response => response.json())
-    .then(data => showImages(data.hitS))
+    .then(data => showImages(data.hits))
     .catch(err => console.log(err))
 }
 
 let slideIndex = 0;
 const selectItem = (event, img) => {
   let element = event.target;
-  element.classList.add('added');
- 
+  element.classList.toggle('added');
+
   let item = sliders.indexOf(img);
   if (item === -1) {
     sliders.push(img);
-  } else {
-    alert('Hey, Already added !')
+  }else{
+    sliders.splice(item,1)
   }
 }
 var timer
@@ -67,7 +70,9 @@ const createSlider = () => {
   document.querySelector('.main').style.display = 'block';
   // hide image aria
   imagesArea.style.display = 'none';
-  const duration = document.getElementById('duration').value || 1000;
+  let duration = document.getElementById('duration').value || 1000;
+
+
   sliders.forEach(slide => {
     let item = document.createElement('div')
     item.className = "slider-item";
@@ -109,14 +114,39 @@ const changeSlide = (index) => {
   items[index].style.display = "block"
 }
 
-searchBtn.addEventListener('click', function () {
+searchBtn.addEventListener('click', searchImage);
+searchForm.addEventListener('submit', searchImage);
+function searchImage(event) {
+  event.preventDefault();
   document.querySelector('.main').style.display = 'none';
   clearInterval(timer);
   const search = document.getElementById('search');
-  getImages(search.value)
+  getImages(search.value);
+  search.value = '';
   sliders.length = 0;
-})
+}
 
 sliderBtn.addEventListener('click', function () {
   createSlider()
 })
+
+
+// Duration Change function 
+function durationChange() {
+  let duration = document.getElementById('duration').value;
+  if (duration <= 0) {
+    document.getElementById('duration').value = 1000;
+  }
+}
+
+// spinner handler
+function spinnerHandler(show) {
+  let spinner = document.getElementById('spinner');
+  if (show) {
+    spinner.classList.add('d-flex');
+    spinner.classList.remove('d-none')
+  }else{
+    spinner.classList.add('d-none');
+    spinner.classList.remove('d-flex')
+  }
+}
